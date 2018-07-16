@@ -98,8 +98,8 @@ class resultsViewController: UIViewController {
     var sv = UIView() 
     
     // variables to store the location at which the search will occur
-    var originlatitude = Double()
-    var originlongitude = Double()
+    private var originlatitude = Double()
+    private var originlongitude = Double()
     
     //array used to store each restaurant's information
     private var RestList = [RestInfo]()
@@ -111,7 +111,7 @@ class resultsViewController: UIViewController {
     private var randomNumList = [Int]()
     
     //store restaurant coordinates
-    var restPosCoord = CLLocationCoordinate2D()
+    private var restPosCoord = CLLocationCoordinate2D()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -522,9 +522,29 @@ extension resultsViewController: CLLocationManagerDelegate {
         // if this is the first location continue, else exit function
         guard let location = locations.first else { return }
         
-        // set camera position and zoom
-        mapView.camera = GMSCameraPosition(target: location.coordinate, zoom: 15, bearing: 0, viewingAngle: 0)
+        // init var to hold inputted distance and zoom level
+        var dist = Double(travelDistance)!
+        var zoom = Float()
         
+        // if the travel distance is between specific variables, set the map zoom level accordingly
+        if dist > 0 && dist <= 0.5 {
+            zoom = 15
+        }
+        else if dist > 0.6 && dist <= 1.5 {
+            zoom = 13
+        }
+        else if dist > 1.6 && dist <= 2.5 {
+            zoom = 12
+        }
+        else if dist > 2.5 && dist <= 4 {
+            zoom = 11
+        }
+        else if dist > 4 {
+            zoom = 10
+        }
+        
+        // set camera position and zoom
+        mapView.camera = GMSCameraPosition(target: location.coordinate, zoom: zoom, bearing: 0, viewingAngle: 0)
         // stop updating location of user
         locationManager.stopUpdatingLocation()
     }

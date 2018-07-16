@@ -77,16 +77,34 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
      */
     @IBAction func minPriceChange(_ sender: UISegmentedControl) {
         // Go into switch to determine which option was selected then set minPrice to the corresponding value
+        // disable options in maxPriceInput if the minPriceInput > maxPriceInput 
         switch minPriceInput.selectedSegmentIndex {
         case 0:
             minPrice = 1
+            maxPriceInput.setEnabled(true, forSegmentAt: 0)
+            maxPriceInput.setEnabled(true, forSegmentAt: 1)
+            maxPriceInput.setEnabled(true, forSegmentAt: 2)
+            maxPriceInput.setEnabled(true, forSegmentAt: 3)
         case 1:
             minPrice = 2
+            maxPriceInput.setEnabled(false, forSegmentAt: 0)
+            maxPriceInput.setEnabled(true, forSegmentAt: 1)
+            maxPriceInput.setEnabled(true, forSegmentAt: 2)
+            maxPriceInput.setEnabled(true, forSegmentAt: 3)
         case 2:
             minPrice = 3
+            maxPriceInput.setEnabled(false, forSegmentAt: 0)
+            maxPriceInput.setEnabled(false, forSegmentAt: 1)
+            maxPriceInput.setEnabled(true, forSegmentAt: 2)
+            maxPriceInput.setEnabled(true, forSegmentAt: 3)
         case 3:
             minPrice = 4
+            maxPriceInput.setEnabled(false, forSegmentAt: 0)
+            maxPriceInput.setEnabled(false, forSegmentAt: 1)
+            maxPriceInput.setEnabled(false, forSegmentAt: 2)
+            maxPriceInput.setEnabled(true, forSegmentAt: 3)
         default:
+            maxPrice = minPrice
             break
         }
     }
@@ -128,7 +146,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         resultsViewController.minPrice = minPrice
         resultsViewController.maxPrice = maxPrice
         resultsViewController.minRating = Float(rating)
-        
     }
     
     /**
@@ -143,6 +160,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         if locationInput.text != "" && travelDistanceInput.text != "" && searchKeywordsInput.text != "" {
             performSegue(withIdentifier: "resultsViewController", sender: self)
         }
+        print("hello test test test")
     }
     
     private func convertDist(dist: Double) -> Double {
@@ -155,6 +173,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         
         placesClient = GMSPlacesClient.shared()
         
+        // set numeric keypad with decimal to travel dist input
+        travelDistanceInput.keyboardType = UIKeyboardType.decimalPad
+        
+        //Looks for single or multiple taps.
+        
         // set location manager as delegate
         locationManager.delegate = self
         
@@ -162,6 +185,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         if CLLocationManager.authorizationStatus() == .notDetermined {
             locationManager.requestWhenInUseAuthorization()
         }
+        
+        // add Done buttons to keyboard tool bar. Used to dismiss keyboard when user is done with input
+        locationInput.addDoneButtonOnKeyboard()
+        travelDistanceInput.addDoneButtonOnKeyboard()
+        searchKeywordsInput.addDoneButtonOnKeyboard()
     }
 
     /**
@@ -213,5 +241,38 @@ extension ViewController {
         DispatchQueue.main.async {
             spinner.removeFromSuperview()
         }
+    }
+}
+
+extension UITextField{
+    
+    @IBInspectable var doneAccessory: Bool{
+        get{
+            return self.doneAccessory
+        }
+        set (hasDone) {
+            if hasDone{
+                addDoneButtonOnKeyboard()
+            }
+        }
+    }
+    
+    func addDoneButtonOnKeyboard()
+    {
+        let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
+        doneToolbar.barStyle = .default
+        
+        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let done: UIBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(self.doneButtonAction))
+        
+        let items = [flexSpace, done]
+        doneToolbar.items = items
+        doneToolbar.sizeToFit()
+        
+        self.inputAccessoryView = doneToolbar
+    }
+    
+    @objc func doneButtonAction() {
+        self.resignFirstResponder()
     }
 }
