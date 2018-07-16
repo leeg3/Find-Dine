@@ -34,7 +34,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     var service = "Google"
     var minPrice = 1
     var maxPrice = 2
-
+    var sv = UIView()
+    
     /** get value of slider and set rating
      Purpose: Retrieve value of the rating slider if it is moved.
      
@@ -52,7 +53,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         rating = Double(currentValue)
     }
     
-    /**determine service to use
+    /**
      Purpose: To determine which rating service to use (Google (default) or Yelp)
      
      Parameter: UISwitch: the switch's position determines which service is used
@@ -64,7 +65,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             service = "Yelp"
         }
         else {
-            service = "Google" 
+            service = "Google"
         }
     }
     
@@ -126,10 +127,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         resultsViewController.service = service
         resultsViewController.minPrice = minPrice
         resultsViewController.maxPrice = maxPrice
-        resultsViewController.minRating = Float(rating) 
+        resultsViewController.minRating = Float(rating)
+        
     }
     
-    /**send data to results VC
+    /**
      Purpose: Send data to the specified variables in resultsViewController from above
      
      Parameter: sender: the UIBarButtonItem which navigates to the next ViewController
@@ -137,10 +139,15 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
      TESTTEST
      */
     @IBAction func Find(_ sender: UIBarButtonItem) {
-        // make sure that location, distance and keyword are filled out before sending data
+        // make sure that location and distance are filled out before sending data
         if locationInput.text != "" && travelDistanceInput.text != "" && searchKeywordsInput.text != "" {
             performSegue(withIdentifier: "resultsViewController", sender: self)
         }
+    }
+    
+    private func convertDist(dist: Double) -> Double {
+        let temp = dist * 1609.334
+        return temp
     }
     
     override func viewDidLoad() {
@@ -156,12 +163,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             locationManager.requestWhenInUseAuthorization()
         }
     }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
+
     /**
      Purpose: Retrieve current location's address
      
@@ -191,3 +193,25 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     
 }
 
+extension ViewController {
+    class func displaySpinner(onView : UIView) -> UIView {
+        let spinnerView = UIView.init(frame: onView.bounds)
+        spinnerView.backgroundColor = UIColor.init(red: 0.5, green: 0.5, blue: 0.5, alpha: 0.5)
+        let ai = UIActivityIndicatorView.init(activityIndicatorStyle: .whiteLarge)
+        ai.startAnimating()
+        ai.center = spinnerView.center
+        
+        DispatchQueue.main.async {
+            spinnerView.addSubview(ai)
+            onView.addSubview(spinnerView)
+        }
+        
+        return spinnerView
+    }
+    
+    class func removeSpinner(spinner :UIView) {
+        DispatchQueue.main.async {
+            spinner.removeFromSuperview()
+        }
+    }
+}

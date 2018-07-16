@@ -6,14 +6,6 @@
 //  Copyright © 2018 WIT Senior Design. All rights reserved.
 //
 
-/**
- SET DEFAULT VALUE FOR RATING
- check to make sure that the fields are filed out?
- 
- 
- ask yan how she do
- do a bit more testing on API call
- */
 
 import UIKit
 import GooglePlacePicker
@@ -103,6 +95,7 @@ class resultsViewController: UIViewController {
     var minRating = Float()
     var minPrice = Int()
     var maxPrice = Int()
+    var sv = UIView() 
     
     // variables to store the location at which the search will occur
     var originlatitude = Double()
@@ -118,7 +111,7 @@ class resultsViewController: UIViewController {
     private var randomNumList = [Int]()
     
     //store restaurant coordinates
-    private var restPosCoord = CLLocationCoordinate2D()
+    var restPosCoord = CLLocationCoordinate2D()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -133,7 +126,7 @@ class resultsViewController: UIViewController {
             originlongitude = (locationManager.location?.coordinate.longitude)!
         }
         else {
-            //getCoordinates()? 
+            //getCoordinates()?
         }
         
         // convert distance from miles to meters
@@ -149,31 +142,32 @@ class resultsViewController: UIViewController {
         
         // set marker of first restaurant
         placeMarker(position: restPosCoord)
+        
     }
     
     func geocodeRequest(lat: Double, lng: Double, radius: Double, keyword: String, minPrice: Int, maxPrice: Int, minRating: Float) {
-        
+
         // URL string that returns the JSON object for parsing
         let urlString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=\(lat),\(lng)&radius=\(radius)&type=restaurant&minprice=\(minPrice)&maxprice=\(maxPrice)&keyword=\(keyword)&key=AIzaSyDtbc_paodfWo1KRW0fGQ1dB--g8RyG-Kg"
-        
+
         // set urlString to be URL type?
         guard let url = URL(string: urlString) else { return }
-        
+
         //create task to execute API call and parse the JSON into the RestList array
         let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
             // if the error is not nil, then print out error message
             if error != nil {
                 print(error!.localizedDescription)
             }
-            
+
             // make sure data is data
             guard let data = data else { return }
-            
+
             // Implement JSON decoding and parsing
             do {
                 // Decode retrived data with JSONDecoder into format specified by geocodingJSON
                 let restaurantInfo = try JSONDecoder().decode(geocodingJSON.self, from: data)
-        
+
                 // append each restaurant info to the array if it is greater than the minRating
                 for elem in (restaurantInfo.results)! {
                     if elem.rating >= minRating {
@@ -181,18 +175,18 @@ class resultsViewController: UIViewController {
                     }
                 }
             } catch let jsonError { print(jsonError) }
-            
+
             // calc random number and add to list
             self.randomNum = Int(arc4random_uniform(UInt32(self.RestList.count)))
             self.randomNumList.append(self.randomNum)
-            
+
             // update display to the first randomly generated resturant
             self.setDisplay(pid: self.RestList[self.randomNum].pid)
-            
+
             // set coordinates of resturant
             self.restPosCoord = CLLocationCoordinate2D(latitude: self.RestList[self.randomNum].lat, longitude: self.RestList[self.randomNum].lng)
         }
-        
+
         // start task specified above
         task.resume()
     }
@@ -221,6 +215,7 @@ class resultsViewController: UIViewController {
             // set text fields to the resturant info
             self.restaurantName.text = place.name
             self.placeAddr.text = place.formattedAddress
+//            print(place.formattedAddress!)
             self.placeRating.text = String(place.rating)
             self.placePrice.text = self.text(for: place.priceLevel)
             self.loadFirstPhotoForPlace(placeID: place.placeID)
@@ -352,6 +347,135 @@ class resultsViewController: UIViewController {
         })
     }
     
+    /**
+     Purpose: to open the dedicated maps app on phone for turn by turn directions to location
+     
+     Parameter: sender: UIButton: when the Get Directions button is pressed, exec this function
+     
+     Note: There is no way to change defulat applications in iOS, therefore an alertsheet is used to allow the user to pick which service they want to use.
+     
+     // may or may not add Waze into this
+     */
+    @IBAction func getDirections(_ sender: UIButton) {
+        
+        // init alertsheet
+        let alert = UIAlertController(title: "Navigation Service", message: "Which Navigation Service would you like to use?", preferredStyle: .actionSheet)
+        
+        // add Google Maps option. Selecting this option will call openGoogleMaps
+        alert.addAction(UIAlertAction(title: "Google Maps", style: .default, handler: { action in self.openGoogleMaps()}))
+        // add Apple Maps option. Selecting this option will call openAppleMaps
+        alert.addAction(UIAlertAction(title: "Apple Maps", style: .default, handler: { action in self.openAppleMaps()}))
+        // close alert sheet
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil ))
+        
+        // display alert to user
+        self.present(alert, animated: true)
+    }
+    
+    /**
+     Purpose: to determine if a stret number is present in the formatted address from Google
+     
+     Parameter: input: This is the address of a resturant which is checked for a street number
+     
+     Return: Bool - if a street number is found, then return True, else return false
+     */
+    private func containsStreetNum(input: String) -> Bool {
+        // init bool var
+        var streetNumIsPresent = false
+        
+        // create a character array of the address
+        var temp = Array(input)
+        
+        // search the first 4 entries for a street number, if there is a number then set streetNumIsPresent to True
+        var num = 0
+        while (num <= 3) {
+            if temp[num] >= "0" && temp[num] <= "9" {
+                streetNumIsPresent = true
+            }
+            num+=1
+        }
+        
+        // return streetNumIsPresent
+        return streetNumIsPresent
+    }
+    
+    /**
+     Purpose: to open Google Maps app on phone
+     
+     */
+    private func openGoogleMaps() {
+        // init beginning of string used for URL call
+        var destAddr = "comgooglemaps://?daddr="
+        
+        //determine if a street number is in the resturant address
+        let streetNumIsPresent = containsStreetNum(input: placeAddr.text!)
+        
+        // If there is a street number, then add the address to the URL call string and replace the spaces with +
+        if streetNumIsPresent {
+            destAddr.append(placeAddr.text!)
+            destAddr = destAddr.replacingOccurrences(of: " ", with: "+")
+        }
+        
+        // set destAdrr as a URL fand then check if it can be opened.
+        // If it can be opened then open the application and send it the data via URL
+        // if not then open in safari with the web URL using lat and lng
+        let mapURL = URL(string: destAddr)
+        if UIApplication.shared.canOpenURL(mapURL!)
+        {
+            UIApplication.shared.open(mapURL!, options: [:], completionHandler: nil)
+        }
+        else {
+            // open safari
+            if let webURL = URL(string: "https://google.com/maps?daddr=\(restPosCoord.latitude),\(restPosCoord.longitude)") {
+                UIApplication.shared.open(webURL, options: [:])
+            }
+            else {
+                print("Error with opening google maps in safari")
+            }
+        }
+    }
+    
+    /**
+     Purpose: to open Apple Maps app on phone
+     
+     */
+    private func openAppleMaps() {
+        // init first part of URL
+        var destAddr = "maps://?daddr="
+        
+        //determine if there is a street number present
+        let streetNumIsPresent = containsStreetNum(input: placeAddr.text!)
+        
+        // if a street number is present, then append resturant address to string and remove commas and replace spaces with +
+        // if not then use lat and lng of resturant
+        if streetNumIsPresent {
+            destAddr.append(placeAddr.text!)
+            destAddr = destAddr.replacingOccurrences(of: ",", with: "")
+            destAddr = destAddr.replacingOccurrences(of: " ", with: "+")
+        }
+        else {
+            destAddr.append("\(restPosCoord.latitude),\(restPosCoord.longitude)")
+        }
+        
+        // init string as URL
+        // if the url can be opened in apple maps then open apple maps and display directions to resturant
+        // if not then open google maps with safari to display directions
+        let mapURL = URL(string: destAddr)
+        if UIApplication.shared.canOpenURL(mapURL!)
+        {
+            UIApplication.shared.open(mapURL!, options: [:], completionHandler: nil)
+        }
+        else {
+            // open safari
+            if let webURL = URL(string: "https://google.com/maps?daddr=\(restPosCoord.latitude),\(restPosCoord.longitude)") {
+                UIApplication.shared.open(webURL, options: [:])
+            }
+            else {
+                print("Error with opening google maps in safari")
+            }
+        }
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -405,3 +529,26 @@ extension resultsViewController: CLLocationManagerDelegate {
         locationManager.stopUpdatingLocation()
     }
 }
+
+//extension ViewController {
+//    class func displaySpinner(onView : UIView) -> UIView {
+//        let spinnerView = UIView.init(frame: onView.bounds)
+//        spinnerView.backgroundColor = UIColor.init(red: 0.5, green: 0.5, blue: 0.5, alpha: 0.5)
+//        let ai = UIActivityIndicatorView.init(activityIndicatorStyle: .whiteLarge)
+//        ai.startAnimating()
+//        ai.center = spinnerView.center
+//
+//        DispatchQueue.main.async {
+//            spinnerView.addSubview(ai)
+//            onView.addSubview(spinnerView)
+//        }
+//
+//        return spinnerView
+//    }
+//
+//    class func removeSpinner(spinner :UIView) {
+//        DispatchQueue.main.async {
+//            spinner.removeFromSuperview()
+//        }
+//    }
+//}

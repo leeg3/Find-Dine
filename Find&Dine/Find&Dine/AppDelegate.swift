@@ -19,12 +19,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         // Google Places SDK
-        GMSPlacesClient.provideAPIKey("AIzaSyDdLhpdN6aFFKsPfQ9SdnP8P1UIqxNhAjQ")
+        GMSPlacesClient.provideAPIKey("AIzaSyDtbc_paodfWo1KRW0fGQ1dB--g8RyG-Kg")
         //GMSServices.provideAPIKey("AIzaSyDdLhpdN6aFFKsPfQ9SdnP8P1UIqxNhAjQ")
         GMSServices.provideAPIKey("AIzaSyDtbc_paodfWo1KRW0fGQ1dB--g8RyG-Kg")
         
         // Firebase Realtime Database
-        FirebaseApp.configure()
+        // FirebaseApp.configure()
         // CD Yelp Fusion Kit API
         CDYelpFusionKitManager.shared.configure()
         return true
