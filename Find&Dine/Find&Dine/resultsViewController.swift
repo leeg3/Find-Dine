@@ -18,6 +18,7 @@ import Foundation
 struct geocodingJSON: Codable {
     let html_attributions = [String:String]()
     let results: [infoResult]?
+    let status: String
 }
 //supplementary structs
 struct infoResult: Codable {
@@ -86,7 +87,7 @@ class resultsViewController: UIViewController {
     @IBOutlet weak var searchAgain: UIButton!
     
     // local variables for receiving data from 1st VC
-    var locationFlag = Int() 
+    var locationFlag = Int()
     var location = String()
     var travelDistMeters = Double()
     var travelDistance = String()
@@ -95,7 +96,7 @@ class resultsViewController: UIViewController {
     var minRating = Float()
     var minPrice = Int()
     var maxPrice = Int()
-    var sv = UIView() 
+    var sv = UIView()
     
     // variables to store the location at which the search will occur
     private var originlatitude = Double()
@@ -112,6 +113,8 @@ class resultsViewController: UIViewController {
     
     //store restaurant coordinates
     private var restPosCoord = CLLocationCoordinate2D()
+    
+    private var results = -1
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -135,58 +138,93 @@ class resultsViewController: UIViewController {
         // exec geocodeRequest to get resturants based on criteria from user
         geocodeRequest(lat: originlatitude, lng: originlongitude, radius: travelDistMeters, keyword: keyword, minPrice: minPrice , maxPrice: maxPrice, minRating: minRating)
         
-        // wait for lat and lng to be set before proceeding
-        while (restPosCoord.longitude == 0.0) {
+        while (results == -1) {
             print("waiting...")
         }
         
-        // set marker of first restaurant
-        placeMarker(position: restPosCoord)
+        if results == 0 {
+            // wait for lat and lng to be set before proceeding
+            while (restPosCoord.longitude == 0.0) {
+                print("waiting...")
+            }
+            
+            // set marker of first restaurant
+            placeMarker(position: restPosCoord)
+            
+            if RestList.count == 1 {
+                searchAgain.isEnabled = false
+            }
+        }
+        else {
+            // init alert
+            let alert = UIAlertController(title: "Output Error", message: "0 results returned. Please change the inputs and try again.", preferredStyle: .alert)
+            
+            // add close option. When tapped, it will dismiss the message and return the user to the previous screen
+            alert.addAction(UIAlertAction(title: "Close", style: .cancel, handler: { action in self.navigationController?.popViewController(animated: true)}))
+            
+            // display alert to user
+            self.present(alert, animated: true)
+        }
         
     }
     
     func geocodeRequest(lat: Double, lng: Double, radius: Double, keyword: String, minPrice: Int, maxPrice: Int, minRating: Float) {
-
+        
+        var word = keyword
+        
+        if keyword.contains(" ") {
+            word = keyword.replacingOccurrences(of: " ", with: "+")
+            print("word: ", word)
+        }
+        
         // URL string that returns the JSON object for parsing
-        let urlString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=\(lat),\(lng)&radius=\(radius)&type=restaurant&minprice=\(minPrice)&maxprice=\(maxPrice)&keyword=\(keyword)&key=AIzaSyDtbc_paodfWo1KRW0fGQ1dB--g8RyG-Kg"
-
+        let urlString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=\(lat),\(lng)&radius=\(radius)&type=food&minprice=\(minPrice)&maxprice=\(maxPrice)&keyword=\(word)&key=AIzaSyDtbc_paodfWo1KRW0fGQ1dB--g8RyG-Kg"
+        
         // set urlString to be URL type?
         guard let url = URL(string: urlString) else { return }
-
+        
         //create task to execute API call and parse the JSON into the RestList array
         let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
             // if the error is not nil, then print out error message
             if error != nil {
                 print(error!.localizedDescription)
             }
-
+            
             // make sure data is data
             guard let data = data else { return }
-
+            
             // Implement JSON decoding and parsing
             do {
                 // Decode retrived data with JSONDecoder into format specified by geocodingJSON
                 let restaurantInfo = try JSONDecoder().decode(geocodingJSON.self, from: data)
-
+                
                 // append each restaurant info to the array if it is greater than the minRating
-                for elem in (restaurantInfo.results)! {
-                    if elem.rating >= minRating {
-                        self.RestList.append(RestInfo(lat: elem.geometry?.location!["lat"]! as! Double, lng:elem.geometry?.location!["lng"]! as! Double, pid: elem.place_id!))
+                if restaurantInfo.status == "OK" {
+                    self.results = 0
+                    for elem in (restaurantInfo.results)! {
+                        if elem.rating >= minRating {
+                            self.RestList.append(RestInfo(lat: elem.geometry?.location!["lat"]! as! Double, lng:elem.geometry?.location!["lng"]! as! Double, pid: elem.place_id!))
+                        }
                     }
                 }
+                else {
+                    self.results = 1
+                    print("no results")
+                    return
+                }
             } catch let jsonError { print(jsonError) }
-
+            
             // calc random number and add to list
             self.randomNum = Int(arc4random_uniform(UInt32(self.RestList.count)))
             self.randomNumList.append(self.randomNum)
-
+            
             // update display to the first randomly generated resturant
             self.setDisplay(pid: self.RestList[self.randomNum].pid)
-
+            
             // set coordinates of resturant
             self.restPosCoord = CLLocationCoordinate2D(latitude: self.RestList[self.randomNum].lat, longitude: self.RestList[self.randomNum].lng)
         }
-
+        
         // start task specified above
         task.resume()
     }
@@ -195,7 +233,7 @@ class resultsViewController: UIViewController {
      Purpose: updates the display in resultsViewController to show resturant name, address, rating, price and image of randomly generated resturant
      */
     func setDisplay(pid: String) {
-//        let placeID = pid
+        //        let placeID = pid
         //init GMSPlacesClient() to access Google Places info
         let placesClient = GMSPlacesClient()
         
@@ -215,7 +253,7 @@ class resultsViewController: UIViewController {
             // set text fields to the resturant info
             self.restaurantName.text = place.name
             self.placeAddr.text = place.formattedAddress
-//            print(place.formattedAddress!)
+            //            print(place.formattedAddress!)
             self.placeRating.text = String(place.rating)
             self.placePrice.text = self.text(for: place.priceLevel)
             self.loadFirstPhotoForPlace(placeID: place.placeID)
@@ -243,7 +281,7 @@ class resultsViewController: UIViewController {
      Purpose: Generates a new random number
      
      Parameter: UIButton: waits for the UIButton to be pressed, then executes this function
-    */
+     */
     @IBAction func SearchAgain(_ sender: UIButton) {
         // clear map of existing markers
         mapView.clear()
@@ -302,13 +340,13 @@ class resultsViewController: UIViewController {
     func text(for priceLevel: GMSPlacesPriceLevel) -> String {
         // determine what the price level is and return the corresponding string
         switch priceLevel {
-            case .free: return NSLocalizedString("Free", comment: "Free")
-            case .cheap: return NSLocalizedString("$", comment: "$")
-            case .medium: return NSLocalizedString("$$", comment: "$$")
-            case .high: return NSLocalizedString("$$$", comment: "$$$")
-            case .expensive: return NSLocalizedString("$$$$", comment: "$$$$")
-            case .unknown: return NSLocalizedString("Unknown", comment: "Unknown")
-            }
+        case .free: return NSLocalizedString("Free", comment: "Free")
+        case .cheap: return NSLocalizedString("$", comment: "$")
+        case .medium: return NSLocalizedString("$$", comment: "$$")
+        case .high: return NSLocalizedString("$$$", comment: "$$$")
+        case .expensive: return NSLocalizedString("$$$$", comment: "$$$$")
+        case .unknown: return NSLocalizedString("Unknown", comment: "Unknown")
+        }
     }
     
     /**
@@ -334,7 +372,7 @@ class resultsViewController: UIViewController {
      Purpose: to help loadFirstPhotoForPlace function
      
      Parameter: photoMetaData: metadata passed to it from loadFirstPhotoForPlace
-    */
+     */
     private func loadImageForMetadata(photoMetadata: GMSPlacePhotoMetadata) {
         // refresh the display if there are no errors with the first image associated with the place
         GMSPlacesClient.shared().loadPlacePhoto(photoMetadata, callback: { (photo, error) -> Void in
@@ -487,7 +525,7 @@ class resultsViewController: UIViewController {
  Purpose: Used for location services and setting mapView camera
  */
 extension resultsViewController: CLLocationManagerDelegate {
-
+    
     /**
      Purpose: To manage some of the location settings for the app
      
@@ -499,10 +537,10 @@ extension resultsViewController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         // if the location services are not authorized return
         guard status == .authorizedWhenInUse else { return }
-
+        
         // update location to current location
         locationManager.startUpdatingLocation()
-    
+        
         // enable current location to be visible on map
         mapView.isMyLocationEnabled = true
         
@@ -526,9 +564,8 @@ extension resultsViewController: CLLocationManagerDelegate {
         var dist = Double(travelDistance)!
         var zoom = Float()
         
-        // if the travel distance is between specific variables, set the map zoom level accordingly
         if dist > 0 && dist <= 0.5 {
-            zoom = 15
+            zoom = 14
         }
         else if dist > 0.6 && dist <= 1.5 {
             zoom = 13
@@ -550,25 +587,25 @@ extension resultsViewController: CLLocationManagerDelegate {
     }
 }
 
-//extension ViewController {
-//    class func displaySpinner(onView : UIView) -> UIView {
-//        let spinnerView = UIView.init(frame: onView.bounds)
-//        spinnerView.backgroundColor = UIColor.init(red: 0.5, green: 0.5, blue: 0.5, alpha: 0.5)
-//        let ai = UIActivityIndicatorView.init(activityIndicatorStyle: .whiteLarge)
-//        ai.startAnimating()
-//        ai.center = spinnerView.center
-//
-//        DispatchQueue.main.async {
-//            spinnerView.addSubview(ai)
-//            onView.addSubview(spinnerView)
-//        }
-//
-//        return spinnerView
-//    }
-//
-//    class func removeSpinner(spinner :UIView) {
-//        DispatchQueue.main.async {
-//            spinner.removeFromSuperview()
-//        }
-//    }
-//}
+extension resultsViewController {
+    class func displaySpinner(onView : UIView) -> UIView {
+        let spinnerView = UIView.init(frame: onView.bounds)
+        spinnerView.backgroundColor = UIColor.init(red: 0.5, green: 0.5, blue: 0.5, alpha: 0.5)
+        let ai = UIActivityIndicatorView.init(activityIndicatorStyle: .whiteLarge)
+        ai.startAnimating()
+        ai.center = spinnerView.center
+        
+        DispatchQueue.main.async {
+            spinnerView.addSubview(ai)
+            onView.addSubview(spinnerView)
+        }
+        
+        return spinnerView
+    }
+    
+    class func removeSpinner(spinner :UIView) {
+        DispatchQueue.main.async {
+            spinner.removeFromSuperview()
+        }
+    }
+}

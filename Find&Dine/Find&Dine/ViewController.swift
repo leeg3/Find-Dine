@@ -77,7 +77,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
      */
     @IBAction func minPriceChange(_ sender: UISegmentedControl) {
         // Go into switch to determine which option was selected then set minPrice to the corresponding value
-        // disable options in maxPriceInput if the minPriceInput > maxPriceInput 
+        // disable options in maxPriceInput if the minPriceInput > maxPriceInput
         switch minPriceInput.selectedSegmentIndex {
         case 0:
             minPrice = 1
@@ -104,7 +104,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             maxPriceInput.setEnabled(false, forSegmentAt: 2)
             maxPriceInput.setEnabled(true, forSegmentAt: 3)
         default:
-            maxPrice = minPrice
             break
         }
     }
@@ -139,7 +138,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         // init resultsViewController as the segue destination
         let resultsViewController = segue.destination as! resultsViewController
         resultsViewController.locationFlag = currentLocationUse
-        resultsViewController.location = locationInput.text! 
+        resultsViewController.location = locationInput.text!
         resultsViewController.travelDistance = travelDistanceInput.text!
         resultsViewController.keyword = searchKeywordsInput.text!
         resultsViewController.service = service
@@ -148,21 +147,21 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         resultsViewController.minRating = Float(rating)
     }
     
-    /**
-     Purpose: Send data to the specified variables in resultsViewController from above
-     
-     Parameter: sender: the UIBarButtonItem which navigates to the next ViewController
-     
-     TESTTEST
-     */
-    @IBAction func Find(_ sender: UIBarButtonItem) {
-        // make sure that location and distance are filled out before sending data
-        if locationInput.text != "" && travelDistanceInput.text != "" && searchKeywordsInput.text != "" {
-            performSegue(withIdentifier: "resultsViewController", sender: self)
-        }
-        print("hello test test test")
-    }
-    
+    //    /**
+    //     Purpose: Send data to the specified variables in resultsViewController from above
+    //
+    //     Parameter: sender: the UIBarButtonItem which navigates to the next ViewController
+    //
+    //     TESTTEST
+    //     */
+    //    @IBAction func Find(_ sender: UIBarButtonItem) {
+    //        // make sure that location and distance are filled out before sending data
+    ////        if locationInput.text != "" && travelDistanceInput.text != "" && searchKeywordsInput.text != "" {
+    ////            performSegue(withIdentifier: "resultsViewController", sender: self)
+    ////        }
+    //        print("hello test test test")
+    //    }
+    //
     private func convertDist(dist: Double) -> Double {
         let temp = dist * 1609.334
         return temp
@@ -190,8 +189,35 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         locationInput.addDoneButtonOnKeyboard()
         travelDistanceInput.addDoneButtonOnKeyboard()
         searchKeywordsInput.addDoneButtonOnKeyboard()
+        
+        // init right bar button. When pressed exec goToNextPage func
+        let rightBarButton = UIBarButtonItem(title: "Find", style: .plain, target: self, action: #selector(goToNextPage))
+        
+        // add to navigation bar
+        self.navigationItem.rightBarButtonItem = rightBarButton
+        
     }
-
+    
+    /**
+     Purpose: to check inputs so that empty values are not used in the API strings
+     
+     */
+    @objc func goToNextPage() {
+        if locationInput.text != "" && travelDistanceInput.text != "" {
+            performSegue(withIdentifier: "toResults", sender: self)
+        }
+        else if locationInput.text == "" || travelDistanceInput.text == "" {
+            // init alertsheet
+            let alert = UIAlertController(title: "Input Error", message: "Please specify a location and search distance.", preferredStyle: .alert)
+            
+            // add close option. Selecting this option will call openGoogleMaps
+            alert.addAction(UIAlertAction(title: "Close", style: .cancel, handler: nil))
+            
+            // display alert to user
+            self.present(alert, animated: true)
+        }
+    }
+    
     /**
      Purpose: Retrieve current location's address
      
@@ -211,14 +237,13 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                 let place = placeLikelihoodList.likelihoods.first?.place
                 if let place = place {
                     self.locationInput.text = place.formattedAddress?.components(separatedBy: ", ").joined(separator: "\n")
-                 }
+                }
             }
         })
         
         // flag for use in resultsViewController
         currentLocationUse = 1
-    }    
-    
+    }
 }
 
 extension ViewController {
@@ -244,21 +269,20 @@ extension ViewController {
     }
 }
 
-extension UITextField{
+extension UITextField {
     
     @IBInspectable var doneAccessory: Bool{
-        get{
+        get {
             return self.doneAccessory
         }
         set (hasDone) {
-            if hasDone{
+            if hasDone {
                 addDoneButtonOnKeyboard()
             }
         }
     }
     
-    func addDoneButtonOnKeyboard()
-    {
+    func addDoneButtonOnKeyboard() {
         let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
         doneToolbar.barStyle = .default
         
