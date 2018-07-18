@@ -9,7 +9,7 @@
 import UIKit
 import GooglePlaces
 
-class ViewController: UIViewController, CLLocationManagerDelegate {
+class ViewController: UIViewController, CLLocationManagerDelegate, UIPickerViewDataSource, UIPickerViewDelegate {
     
     // init location manager
     let locationManager = CLLocationManager()
@@ -26,15 +26,58 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     @IBOutlet weak var minPriceInput: UISegmentedControl!
     @IBOutlet weak var maxPriceInput: UISegmentedControl!
     @IBOutlet weak var ratingOutput: UILabel!
+    @IBOutlet weak var searchTypeInput: UISegmentedControl!
     
     // variables used for storing values from non text fields
     // each set to a default value
     var currentLocationUse = 0
     var rating = 3.0
     var service = "Google"
+    var type = "restaurant"
     var minPrice = 1
     var maxPrice = 2
     var sv = UIView()
+    
+    // separate lists for food and reataurants
+    let food = ["Burrito", "Pizza", "Burger", "Sushi"]
+    let restaurant = ["American", "Cajun", "Chinese", "French", "Filipino", "Greek", "Indian", "Indonesian", "Italian", "Japanese", "Jewish", "Korean", "Malaysian", "Mexican", "Polish" , "Portugese", "Punjabi", "Russian", "Thai", "Turkish"]
+    
+    // set default list
+    var pickerData = ["American", "Cajun", "Chinese", "French", "Filipino", "Greek", "Indian", "Indonesian", "Italian", "Japanese", "Jewish", "Korean", "Malaysian", "Mexican", "Polish" , "Portugese", "Punjabi", "Russian", "Thai", "Turkish"]
+    
+    /**
+     Purpose: To define how many columns show up in the UIPickerView
+     
+     Return: 1. Only 1 column of options will be visible
+     */
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    /**
+     Purpose: To return the number of elements in the array
+     
+     Return: pickerData.count. denotes how many rows to make for the UIPickerView
+     */
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return pickerData.count
+    }
+    
+    /**
+     Purpose: To return the data stored at row
+     
+     Return: pickerData[row]. returns stored data at element row
+     */
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return pickerData[row]
+    }
+    
+    /**
+     Purpose: To set the display to match the data that was selected
+     */
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        searchKeywordsInput.text = pickerData[row]
+    }
     
     /** get value of slider and set rating
      Purpose: Retrieve value of the rating slider if it is moved.
@@ -47,7 +90,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         let currentValue = ratingInput.value
         
         // update label in ViewController to display current value
-        ratingOutput.text = "\(currentValue)"
+        ratingOutput.text = "\(Int(currentValue))"
         
         // set the current value as the rating
         rating = Double(currentValue)
@@ -66,6 +109,23 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         }
         else {
             service = "Google"
+        }
+    }
+    
+    @IBAction func SearchTypeChange(_ sender: UISegmentedControl) {
+        switch searchTypeInput.selectedSegmentIndex {
+        case 0:
+            type = "restaurant"
+            pickerData = restaurant
+            searchKeywordsInput.text = ""
+            searchKeywordsInput.placeholder = "Mexican, Chinese, Italian..."
+        case 1:
+            type = "food"
+            pickerData = food
+            searchKeywordsInput.text = ""
+            searchKeywordsInput.placeholder = "Pizza, Burritos, Ramen..."
+        default:
+            break 
         }
     }
     
@@ -145,6 +205,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         resultsViewController.minPrice = minPrice
         resultsViewController.maxPrice = maxPrice
         resultsViewController.minRating = Float(rating)
+        resultsViewController.searchType = type
+        // resultsViewController.sv = sv
     }
     
     //    /**
@@ -172,10 +234,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         
         placesClient = GMSPlacesClient.shared()
         
+        // set inital place holder text for searchKeywordsInput
+        searchKeywordsInput.placeholder = "Mexican, Chinese, Italian..."
+        
         // set numeric keypad with decimal to travel dist input
         travelDistanceInput.keyboardType = UIKeyboardType.decimalPad
-        
-        //Looks for single or multiple taps.
         
         // set location manager as delegate
         locationManager.delegate = self
@@ -185,10 +248,19 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             locationManager.requestWhenInUseAuthorization()
         }
         
+        // init UIPickerView to list many types of restaurants
+        let pickerView = UIPickerView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 220))
+        
+        pickerView.delegate = self
+        pickerView.dataSource = self
+    
+        // disabled because idk how to do this 
+//        searchKeywordsInput.inputView = pickerView
+        searchKeywordsInput.addDoneButtonOnKeyboard()
+        
         // add Done buttons to keyboard tool bar. Used to dismiss keyboard when user is done with input
         locationInput.addDoneButtonOnKeyboard()
         travelDistanceInput.addDoneButtonOnKeyboard()
-        searchKeywordsInput.addDoneButtonOnKeyboard()
         
         // init right bar button. When pressed exec goToNextPage func
         let rightBarButton = UIBarButtonItem(title: "Find", style: .plain, target: self, action: #selector(goToNextPage))
@@ -204,11 +276,12 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
      */
     @objc func goToNextPage() {
         if locationInput.text != "" && travelDistanceInput.text != "" {
+//            sv = ViewController.displaySpinner(onView: self.view)
             performSegue(withIdentifier: "toResults", sender: self)
         }
         else if locationInput.text == "" || travelDistanceInput.text == "" {
             // init alertsheet
-            let alert = UIAlertController(title: "Input Error", message: "Please specify a location and search distance.", preferredStyle: .alert)
+            let alert = UIAlertController(title: "Input Error", message: "Please specify a location and search radius.", preferredStyle: .alert)
             
             // add close option. Selecting this option will call openGoogleMaps
             alert.addAction(UIAlertAction(title: "Close", style: .cancel, handler: nil))
@@ -283,7 +356,7 @@ extension UITextField {
     }
     
     func addDoneButtonOnKeyboard() {
-        let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
+        let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 40))
         doneToolbar.barStyle = .default
         
         let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)

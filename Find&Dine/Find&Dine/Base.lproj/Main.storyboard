@@ -42,13 +42,13 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Cusinie Type or Keywords:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Vyy-IL-XLd">
-                                <rect key="frame" x="15" y="259" width="202" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Search Type:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Vyy-IL-XLd">
+                                <rect key="frame" x="15" y="259" width="100" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Italian, Chinese, Sushi, Burgers..." minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="enY-XU-Lyb">
+                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="enY-XU-Lyb">
                                 <rect key="frame" x="15" y="285" width="345" height="30"/>
                                 <nil key="textColor"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
@@ -136,6 +136,16 @@
                                     <action selector="maxPriceChange:" destination="BYZ-38-t0r" eventType="valueChanged" id="Nr2-AI-a5H"/>
                                 </connections>
                             </segmentedControl>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="02h-KB-1aM">
+                                <rect key="frame" x="199" y="255" width="161" height="29"/>
+                                <segments>
+                                    <segment title="Restaurant"/>
+                                    <segment title="Food"/>
+                                </segments>
+                                <connections>
+                                    <action selector="SearchTypeChange:" destination="BYZ-38-t0r" eventType="valueChanged" id="1ot-gM-CLN"/>
+                                </connections>
+                            </segmentedControl>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
@@ -159,6 +169,8 @@
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="DuS-QS-w5T" secondAttribute="trailing" constant="90" id="Ub7-zU-4iN"/>
                             <constraint firstItem="gil-bQ-f4K" firstAttribute="leading" secondItem="7tM-bG-1xH" secondAttribute="trailing" constant="115" id="Vo5-ZZ-QWz"/>
                             <constraint firstItem="Vyy-IL-XLd" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="15" id="Vyq-pa-VPW"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="02h-KB-1aM" secondAttribute="trailing" constant="15" id="W6F-lR-eHA"/>
+                            <constraint firstItem="02h-KB-1aM" firstAttribute="top" secondItem="ZKk-v9-fZH" secondAttribute="bottom" constant="16" id="Z1E-zU-skX"/>
                             <constraint firstItem="1th-mH-Xzv" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="15" id="Zl2-C5-Ncz"/>
                             <constraint firstItem="4rH-h7-baG" firstAttribute="top" secondItem="DuS-QS-w5T" secondAttribute="bottom" constant="10" id="ai3-Ql-ODr"/>
                             <constraint firstItem="ZKk-v9-fZH" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="15" id="cqT-ru-0Q0"/>
@@ -173,10 +185,12 @@
                             <constraint firstItem="ZKk-v9-fZH" firstAttribute="top" secondItem="TkT-0p-Eb4" secondAttribute="bottom" constant="5" id="neQ-cl-GMb"/>
                             <constraint firstItem="Hix-ZJ-WCb" firstAttribute="top" secondItem="enY-XU-Lyb" secondAttribute="bottom" constant="20" id="p2Y-iZ-eZC"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="5la-Q3-7CM" secondAttribute="trailing" constant="90" id="qaA-z4-2aL"/>
+                            <constraint firstItem="enY-XU-Lyb" firstAttribute="top" secondItem="02h-KB-1aM" secondAttribute="bottom" constant="2" id="qe9-aT-1GK"/>
                             <constraint firstItem="Hix-ZJ-WCb" firstAttribute="leading" secondItem="IQT-KV-4ju" secondAttribute="trailing" constant="8" id="r68-VX-rc9"/>
                             <constraint firstItem="gil-bQ-f4K" firstAttribute="top" secondItem="Fp2-ft-PzX" secondAttribute="bottom" constant="20" id="sxJ-MH-0uI"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="L69-Ww-pd1" secondAttribute="trailing" constant="15" id="tQK-y9-fOG"/>
                             <constraint firstItem="TkT-0p-Eb4" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="15" id="taR-nC-USn"/>
+                            <constraint firstItem="02h-KB-1aM" firstAttribute="leading" secondItem="Vyy-IL-XLd" secondAttribute="trailing" constant="84" id="u3r-Fg-Ii7"/>
                             <constraint firstItem="7tM-bG-1xH" firstAttribute="top" secondItem="Fp2-ft-PzX" secondAttribute="bottom" constant="20" id="uai-rc-ey6"/>
                             <constraint firstItem="SGa-nl-Y0m" firstAttribute="top" secondItem="Fp2-ft-PzX" secondAttribute="bottom" constant="20" id="w1y-aL-Jfe"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="gil-bQ-f4K" secondAttribute="trailing" constant="15" id="weJ-aI-ddv"/>
@@ -201,13 +215,14 @@
                         <outlet property="ratingOutput" destination="Hix-ZJ-WCb" id="u4c-Pz-Osy"/>
                         <outlet property="reviewServiceInput" destination="7tM-bG-1xH" id="XO0-zL-yh2"/>
                         <outlet property="searchKeywordsInput" destination="enY-XU-Lyb" id="GSM-KU-hlY"/>
+                        <outlet property="searchTypeInput" destination="02h-KB-1aM" id="gjn-Zj-Vwj"/>
                         <outlet property="travelDistanceInput" destination="ZKk-v9-fZH" id="0dM-z4-Hw5"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
                 <exit id="rt4-xJ-xSW" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
-            <point key="canvasLocation" x="2102" y="34"/>
+            <point key="canvasLocation" x="2101.5999999999999" y="33.990147783251231"/>
         </scene>
         <!--Results-->
         <scene sceneID="HGt-QY-2nc">

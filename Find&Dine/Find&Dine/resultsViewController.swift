@@ -98,6 +98,9 @@ class resultsViewController: UIViewController {
     var maxPrice = Int()
     var sv = UIView()
     
+    //**
+    var searchType = String()
+    
     // variables to store the location at which the search will occur
     private var originlatitude = Double()
     private var originlongitude = Double()
@@ -119,6 +122,8 @@ class resultsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+//        let sv = ViewController.displaySpinner(onView: self.view)
+        
         // set location manager delegate and request for location use if not authorized already
         locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
@@ -136,7 +141,7 @@ class resultsViewController: UIViewController {
         travelDistMeters = getDistance(distance: Double(travelDistance)!)
         
         // exec geocodeRequest to get resturants based on criteria from user
-        geocodeRequest(lat: originlatitude, lng: originlongitude, radius: travelDistMeters, keyword: keyword, minPrice: minPrice , maxPrice: maxPrice, minRating: minRating)
+        geocodeRequest(lat: originlatitude, lng: originlongitude, radius: travelDistMeters, keyword: keyword, type: searchType, minPrice: minPrice , maxPrice: maxPrice, minRating: minRating)
         
         while (results == -1) {
             print("waiting...")
@@ -148,6 +153,7 @@ class resultsViewController: UIViewController {
                 print("waiting...")
             }
             
+//            ViewController.removeSpinner(spinner: self.view)
             // set marker of first restaurant
             placeMarker(position: restPosCoord)
             
@@ -168,7 +174,7 @@ class resultsViewController: UIViewController {
         
     }
     
-    func geocodeRequest(lat: Double, lng: Double, radius: Double, keyword: String, minPrice: Int, maxPrice: Int, minRating: Float) {
+    func geocodeRequest(lat: Double, lng: Double, radius: Double, keyword: String, type: String, minPrice: Int, maxPrice: Int, minRating: Float) {
         
         var word = keyword
         
@@ -178,7 +184,7 @@ class resultsViewController: UIViewController {
         }
         
         // URL string that returns the JSON object for parsing
-        let urlString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=\(lat),\(lng)&radius=\(radius)&type=food&minprice=\(minPrice)&maxprice=\(maxPrice)&keyword=\(word)&key=AIzaSyDtbc_paodfWo1KRW0fGQ1dB--g8RyG-Kg"
+        let urlString = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=\(lat),\(lng)&radius=\(radius)&type=\(searchType)&minprice=\(minPrice)&maxprice=\(maxPrice)&keyword=\(word)&key=AIzaSyDtbc_paodfWo1KRW0fGQ1dB--g8RyG-Kg"
         
         // set urlString to be URL type?
         guard let url = URL(string: urlString) else { return }
